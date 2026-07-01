@@ -70,11 +70,13 @@
 
         window.onload = () => {
             document.getElementById('date').valueAsDate = new Date();
-            fetch(API_URL).then(res => res.json()).then(data => {
-                fillRadio('member-container', 'member', data.members);
-                fillRadio('category-container', 'category', data.categories);
-                fillRadio('channel-container', 'channel', data.channels);
-            });
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    fillRadio('member-container', 'member', data.members);
+                    fillRadio('category-container', 'category', data.categories);
+                    fillRadio('channel-container', 'channel', data.channels);
+                });
         };
 
         function fillRadio(id, name, list) {
@@ -86,7 +88,9 @@
 
         function handleFormSubmit() {
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = '寫入中...';
+            btn.disabled = true; 
+            btn.innerText = '寫入中...';
+            
             const data = {
                 date: document.getElementById('date').value,
                 member: document.querySelector('input[name="member"]:checked')?.value || '',
@@ -101,7 +105,13 @@
                 .then(() => {
                     alert("記帳成功！");
                     document.getElementById('expenseForm').reset();
-                    btn.disabled = false; btn.innerText = '送出';
+                    btn.disabled = false; 
+                    btn.innerText = '送出';
+                })
+                .catch(err => {
+                    alert("發生錯誤，請稍後再試");
+                    btn.disabled = false; 
+                    btn.innerText = '送出';
                 });
         }
     </script>
