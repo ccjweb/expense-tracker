@@ -18,7 +18,8 @@
         .radio-group input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
         .radio-group label { padding: 8px 14px; border: 1px solid #ccc; border-radius: 20px; background-color: #fff; color: #555; cursor: pointer; font-size: 14px; transition: all 0.2s ease; }
         .radio-group input[type="radio"]:checked + label { background-color: #4CAF50; color: white; border-color: #4CAF50; font-weight: bold; }
-        button.submit-btn { background-color: #4CAF50; color: white; border: none; padding: 0 20px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; height: 42px; }
+        button.submit-btn { background-color: #4CAF50; color: white; border: none; padding: 0 20px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; height: 42px; width: 100%; }
+        button.submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
         #status { margin-top: 10px; text-align: center; font-weight: bold; color: #2e7d32; font-size: 14px; height: 20px; }
     </style>
 </head>
@@ -52,30 +53,32 @@
                     <input type="number" id="amount" placeholder="輸入數字" required>
                 </div>
             </div>
-            <div class="flex-row" style="margin-bottom: 0;">
-                <div class="col-half">
-                    <label class="section-title">備註</label>
-                    <input type="text" id="note" placeholder="選填">
-                </div>
-                <div class="col-auto">
-                    <button type="button" id="submitBtn" class="submit-btn" onclick="handleFormSubmit()">送出</button>
-                </div>
+            <div class="form-group">
+                <label class="section-title">備註</label>
+                <input type="text" id="note" placeholder="選填">
             </div>
+            <button type="button" id="submitBtn" class="submit-btn" onclick="handleFormSubmit()">送出</button>
         </form>
         <div id="status"></div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwDNEb9PVllDuRtYBatxEo9owNrj-bMdduMZtvhHv4nEAUdj7PXJd7eU0K-LPPWab2c/exec";
+        // 🚨 請務必將下方的 URL 換成你部署後的正確網址，並補上你的 Token
+        const BASE_URL = "https://script.google.com/macros/s/AKfycbx6atT3Svy4y_evJfWsKhHqLj9wunEprwafLVOFecv6LjluZM7o-dYPoB7CvB1tA8L9/exec";
+        const TOKEN = "ccjexpense";
+        const API_URL = `${BASE_URL}?token=${TOKEN}`;
 
         window.onload = () => {
             document.getElementById('date').valueAsDate = new Date();
-            fetch(API_URL)
+            fetch(BASE_URL) // 讀取時不一定要帶 Token (看你後端設計)，若需要則改為 API_URL
                 .then(res => res.json())
                 .then(data => {
-                    fillRadio('member-container', 'member', data.members);
-                    fillRadio('category-container', 'category', data.categories);
-                    fillRadio('channel-container', 'channel', data.channels);
+                    fillRadio('member-container', 'member', data.data.members);
+                    fillRadio('category-container', 'category', data.data.categories);
+                    fillRadio('channel-container', 'channel', data.data.channels);
+                })
+                .catch(err => {
+                    document.getElementById('category-container').innerText = "載入失敗，請檢查網路";
                 });
         };
 
@@ -88,6 +91,14 @@
 
         function handleFormSubmit() {
             const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('status');
+            
+            // 基礎檢查
+            if (!document.querySelector('input[name="category"]:checked')) {
+                alert("請選擇支出類別");
+                return;
+            }
+
             btn.disabled = true; 
             btn.innerText = '寫入中...';
             
@@ -101,18 +112,27 @@
                 note: document.getElementById('note').value
             };
 
-            fetch(API_URL, { method: "POST", body: JSON.stringify(data) })
-                .then(() => {
+            fetch(API_URL, { 
+                method: "POST", 
+                body: JSON.stringify(data) 
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
                     alert("記帳成功！");
                     document.getElementById('expenseForm').reset();
-                    btn.disabled = false; 
-                    btn.innerText = '送出';
-                })
-                .catch(err => {
-                    alert("發生錯誤，請稍後再試");
-                    btn.disabled = false; 
-                    btn.innerText = '送出';
-                });
+                } else {
+                    alert("寫入失敗：" + (res.error || "未知錯誤"));
+                }
+            })
+            .catch(err => {
+                alert("連線錯誤，請檢查網路或 Token 設定");
+                console.error(err);
+            })
+            .finally(() => {
+                btn.disabled = false; 
+                btn.innerText = '送出';
+            });
         }
     </script>
 </body>
