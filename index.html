@@ -87,33 +87,37 @@
         }
 
         function handleFormSubmit() {
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true; 
-            btn.innerText = '寫入中...';
-            
-            const data = {
-                date: document.getElementById('date').value,
-                member: document.querySelector('input[name="member"]:checked')?.value || '',
-                category: document.querySelector('input[name="category"]:checked')?.value || '',
-                item: document.getElementById('item').value,
-                amount: document.getElementById('amount').value,
-                channel: document.querySelector('input[name="channel"]:checked')?.value || '',
-                note: document.getElementById('note').value
-            };
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; 
+    btn.innerText = '寫入中...';
+    
+    const data = {
+        date: document.getElementById('date').value,
+        member: document.querySelector('input[name="member"]:checked')?.value || '',
+        category: document.querySelector('input[name="category"]:checked')?.value || '',
+        item: document.getElementById('item').value,
+        amount: document.getElementById('amount').value,
+        channel: document.querySelector('input[name="channel"]:checked')?.value || '',
+        note: document.getElementById('note').value
+    };
 
-            fetch(API_URL, { method: "POST", body: JSON.stringify(data) })
-                .then(() => {
-                    alert("記帳成功！");
-                    document.getElementById('expenseForm').reset();
-                    btn.disabled = false; 
-                    btn.innerText = '送出';
-                })
-                .catch(err => {
-                    alert("發生錯誤，請稍後再試");
-                    btn.disabled = false; 
-                    btn.innerText = '送出';
-                });
-        }
+    fetch(API_URL, { method: "POST", body: JSON.stringify(data) })
+        .then(() => {
+            alert("記帳成功！");
+            document.getElementById('expenseForm').reset();
+            
+            // 關鍵修改：送出後立即把日期改回今天
+            document.getElementById('date').valueAsDate = new Date();
+            
+            btn.disabled = false; 
+            btn.innerText = '送出';
+        })
+        .catch(err => {
+            alert("發生錯誤，請稍後再試");
+            btn.disabled = false; 
+            btn.innerText = '送出';
+        });
+}
     </script>
 </body>
 </html>
